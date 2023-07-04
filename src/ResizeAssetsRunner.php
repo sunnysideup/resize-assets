@@ -21,7 +21,7 @@ class ResizeAssetsRunner
         self::$useGd = true;
     }
 
-    public static function run_dir(string $dir, string $img, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
+    public static function run_dir(string $dir, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
     {
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
 
@@ -34,7 +34,6 @@ class ResizeAssetsRunner
 
     public static function run_one(string $img, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
     {
-        echo "---".PHP_EOL;
         self::getImageResizerLib();
         list($width, $height) = getimagesize($img);
         if ($width <= $maxWidth && $height <= $maxHeight) {
@@ -43,8 +42,8 @@ class ResizeAssetsRunner
         }
         // Calculate new dimensions
         $ratio = min($maxWidth / $width, $maxHeight / $height);
-        $newWidth = $width * $ratio;
-        $newHeight = $height * $ratio;
+        $newWidth = (int) round($width * $ratio);
+        $newHeight = (int) round($height * $ratio);
 
         if ($dryRun) {
             echo "Dry run: Would resize $img ({$width}x{$height}) to ($newWidth x $newHeight)".PHP_EOL;
