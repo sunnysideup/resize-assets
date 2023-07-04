@@ -21,7 +21,7 @@ class ResizeAssetsRunner
         self::$useGd = true;
     }
 
-    public function run_dir(string $dir, string $img, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
+    public static function run_dir(string $dir, string $img, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
     {
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
 
