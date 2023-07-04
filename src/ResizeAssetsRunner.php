@@ -77,25 +77,27 @@ class ResizeAssetsRunner
                     $sourceImage = imagecreatefromgif($img);
                     break;
             }
-            imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            if($sourceImage) {
+                imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
 
-            // Save the image
-            switch (strtolower(pathinfo($img, PATHINFO_EXTENSION))) {
-                case 'jpg':
-                case 'jpeg':
-                    imagejpeg($newImage, $img);
-                    break;
-                case 'png':
-                    imagepng($newImage, $img);
-                    break;
-                case 'gif':
-                    imagegif($newImage, $img);
-                    break;
+                // Save the image
+                switch (strtolower(pathinfo($img, PATHINFO_EXTENSION))) {
+                    case 'jpg':
+                    case 'jpeg':
+                        imagejpeg($newImage, $img);
+                        break;
+                    case 'png':
+                        imagepng($newImage, $img);
+                        break;
+                    case 'gif':
+                        imagegif($newImage, $img);
+                        break;
+                }
+
+                // Free up memory
+                imagedestroy($sourceImage);
+                imagedestroy($newImage);
             }
-
-            // Free up memory
-            imagedestroy($sourceImage);
-            imagedestroy($newImage);
         } else {
 
         }
