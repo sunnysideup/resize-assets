@@ -1,19 +1,27 @@
 {
-    "name": "sunnysideup/resize-assets",
-    "description": "Resizes all images in a folder, recursively, to a max width and height.",
-    "type": "library",
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Sunnysideup\\ResizeAssets\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "Nicolaas",
-            "email": "github@sunnysideup.co.nz"
-        }
-    ],
-    "minimum-stability": "dev",
-    "require": {}
+  "name": "sunnysideup/resize-assets",
+  "description": "Resizes all images in a folder, recursively, to a max width and height.",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "media",
+    "images",
+    "assets",
+    "resize",
+    "width",
+    "height"
+  ],
+  "autoload": {
+    "psr-4": {
+      "Sunnysideup\\ResizeAssets\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Nicolaas",
+      "email": "github@sunnysideup.co.nz"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {}
 }
