@@ -10,6 +10,7 @@ class ResizeAssetsRunner
 {
     protected static $useImagick = false;
     protected static $useGd = false;
+    protected static $patterns_to_skip = [];
 
     public static function set_imagegick_as_converter()
     {
@@ -21,12 +22,24 @@ class ResizeAssetsRunner
         self::$useGd = true;
     }
 
+    /**
+     * e.g. providing `['___']` will exclude all files with `___` in them.
+    public static function patterns_to_skip(array $array) 
+    {
+        self::$patterns_to_skip = $array;
+    }
+
     public static function run_dir(string $dir, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
     {
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
 
         foreach ($files as $file) {
             if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif'])) {
+                foreach(self::$patterns_to_skip as $pattern) {
+                    if(strpos($file, $pattern) !== false) {
+                        continue;
+                    }
+                }
                 self::run_one($file->getPathname(), $maxWidth, $maxHeight, $dryRun);
             }
         }
