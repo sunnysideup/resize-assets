@@ -11,12 +11,12 @@ class ResizeAssetsRunner
     protected static $useImagick = false;
     protected static $useGd = false;
 
-    public function set_imagegick_as_converter()
+    public static function set_imagegick_as_converter()
     {
         self::$useImagick = true;
     }
 
-    public function set_gd_as_converter()
+    public static function set_gd_as_converter()
     {
         self::$useGd = true;
     }
