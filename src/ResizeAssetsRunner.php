@@ -37,7 +37,7 @@ class ResizeAssetsRunner
             if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif'])) {
                 foreach(self::$patterns_to_skip as $pattern) {
                     if(strpos($file, $pattern) !== false) {
-                        continue;
+                        continue 2;
                     }
                 }
                 self::run_one($file->getPathname(), $maxWidth, $maxHeight, $dryRun);
