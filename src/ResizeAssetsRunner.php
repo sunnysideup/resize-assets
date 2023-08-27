@@ -24,7 +24,8 @@ class ResizeAssetsRunner
 
     /**
      * e.g. providing `['___']` will exclude all files with `___` in them.
-    public static function patterns_to_skip(array $array) 
+     */
+    public static function patterns_to_skip(array $array)
     {
         self::$patterns_to_skip = $array;
     }
