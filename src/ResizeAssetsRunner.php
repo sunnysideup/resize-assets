@@ -11,15 +11,28 @@ class ResizeAssetsRunner
     protected static $useImagick = false;
     protected static $useGd = false;
     protected static $patterns_to_skip = [];
+    protected static $max_file_size_in_mb = 2;
 
     public static function set_imagick_as_converter()
     {
         self::$useImagick = true;
+        self::$useGd = false;
     }
 
     public static function set_gd_as_converter()
     {
         self::$useGd = true;
+        self::$useImagick = false;
+    }
+
+    public static function set_max_file_size_in_mb(?int $max_file_size_in_mb = 2)
+    {
+        self::$max_file_size_in_mb = $max_file_size_in_mb = $max_file_size_in_mb;
+    }
+
+    public static function set_gd_or_imagick_as_converter()
+    {
+        self::getImageResizerLib();
     }
 
     /**
@@ -32,6 +45,8 @@ class ResizeAssetsRunner
 
     public static function run_dir(string $dir, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
     {
+        self::set_gd_or_imagick_as_converter();
+
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
 
         foreach ($files as $file) {
@@ -42,16 +57,24 @@ class ResizeAssetsRunner
                     }
                 }
                 self::run_one($file->getPathname(), $maxWidth, $maxHeight, $dryRun);
+                $sizeCheck = self::isFileSizeGreaterThan($file->getPathname());
+                if($sizeCheck) {
+                    list($width, $height) = getimagesize($file->getPathname());
+                    $ratio = $width / $height;
+                    self::run_one($file->getPathname(), round($width - (1 * $sizeCheck * $ratio)), round($height - (1 * $sizeCheck * $ratio)), $dryRun, true);
+                    echo 'ERROR! ' . $file . ' is still ' . $sizeCheck . '% too big!' . PHP_EOL;
+                }
             }
         }
     }
 
-    public static function run_one(string $img, int $maxWidth, int $maxHeight, ?bool $dryRun = true)
+    public static function run_one(string $img, int $maxWidth, int $maxHeight, ?bool $dryRun = true, ?bool $force = false)
     {
-        self::getImageResizerLib();
         list($width, $height) = getimagesize($img);
-        if ($width <= $maxWidth && $height <= $maxHeight) {
-            echo "Skipping $img ({$width}x{$height})" . PHP_EOL;
+        if ($width <= $maxWidth && $height <= $maxHeight && !$force) {
+            if($dryRun) {
+                echo "-- skipping $img ({$width}x{$height})" . PHP_EOL;
+            }
             return;
         }
         // Calculate new dimensions
@@ -69,7 +92,7 @@ class ResizeAssetsRunner
 
         if(self::$useImagick) {
             /** @var \Imagick $Image */
-            $image = new Imagick($img);
+            $image = new \Imagick($img);
             $image->resizeImage($newWidth, $newHeight, Imagick::FILTER_LANCZOS, 1);
             $image->writeImage($img);
             $image->clear();
@@ -114,7 +137,7 @@ class ResizeAssetsRunner
                 imagedestroy($newImage);
             }
         } else {
-
+            user_error("Error: Neither Imagick nor GD is installed.\n");
         }
         // Copy and resize part of an image with resampling
 
@@ -127,12 +150,19 @@ class ResizeAssetsRunner
         }
         if (extension_loaded('imagick')) {
             self::$useImagick = true;
-            self::$useGd = false;
         } elseif (extension_loaded('gd')) {
             self::$useGd = true;
-            self::$useImagick = false;
         } else {
             exit("Error: Neither Imagick nor GD is installed.\n");
         }
+    }
+    protected static function isFileSizeGreaterThan(string $filePath): ?float
+    {
+        $fileSize = filesize($filePath);
+        $maxSize = self::$max_file_size_in_mb * 1024 * 1024;
+        if ($fileSize > $maxSize) {
+            return round(($fileSize - $maxSize) / $maxSize * 100);
+        }
+        return null;
     }
 }
