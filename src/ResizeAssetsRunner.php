@@ -12,7 +12,7 @@ class ResizeAssetsRunner
     protected static $useGd = false;
     protected static $patterns_to_skip = [];
 
-    public static function set_imagegick_as_converter()
+    public static function set_imagick_as_converter()
     {
         self::$useImagick = true;
     }
@@ -51,7 +51,7 @@ class ResizeAssetsRunner
         self::getImageResizerLib();
         list($width, $height) = getimagesize($img);
         if ($width <= $maxWidth && $height <= $maxHeight) {
-            echo "Skipping $img ({$width}x{$height})".PHP_EOL;
+            echo "Skipping $img ({$width}x{$height})" . PHP_EOL;
             return;
         }
         // Calculate new dimensions
@@ -60,14 +60,15 @@ class ResizeAssetsRunner
         $newHeight = (int) round($height * $ratio);
 
         if ($dryRun) {
-            echo "Dry run: Would resize $img ({$width}x{$height}) to ($newWidth x $newHeight)".PHP_EOL;
+            echo "Dry run: Would resize $img ({$width}x{$height}) to ($newWidth x $newHeight)" . PHP_EOL;
             return;
         }
 
-        echo "Resizing $img".PHP_EOL;
+        echo "Resizing $img" . PHP_EOL;
 
 
         if(self::$useImagick) {
+            /** @var \Imagick $Image */
             $image = new Imagick($img);
             $image->resizeImage($newWidth, $newHeight, Imagick::FILTER_LANCZOS, 1);
             $image->writeImage($img);
