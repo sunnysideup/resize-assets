@@ -62,7 +62,7 @@ class ResizeAssetsRunner
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
 
         foreach ($files as $file) {
-            if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif'])) {
+            if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])) {
                 foreach(self::$patterns_to_skip as $pattern) {
                     if(strpos($file, $pattern) !== false) {
                         continue 2;
