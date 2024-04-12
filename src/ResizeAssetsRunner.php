@@ -100,6 +100,8 @@ class ResizeAssetsRunner
                 $image = Image::get()->filter(['File.Filename' => $fullPath])->first();
                 if($image && $image->exists()) {
                     self::rehash_image($image);
+                } else {
+                    echo 'ERROR! ' . $file . ' is not in the database!' . PHP_EOL;
                 }
             }
         }
@@ -241,8 +243,6 @@ class ResizeAssetsRunner
     public static function rehash_image($image)
     {
 
-
-        // RUN!
         /** @var Sha1FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
         try {
