@@ -2,9 +2,16 @@
 
 namespace Sunnysideup\ResizeAssets;
 
+use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Imagick;
+use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
+use SilverStripe\Assets\Storage\Sha1FileHashingService;
+use SilverStripe\Assets\Image;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\DB;
 
 class ResizeAssetsRunner
 {
@@ -28,6 +35,11 @@ class ResizeAssetsRunner
         foreach ($files as $file) {
             if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif'])) {
                 self::run_one($file->getPathname(), $maxWidth, $maxHeight, $dryRun);
+                $fullPath = trim(str_replace(ASSETS_PATH, '', $file->getPathname()), '/');
+                $image = Image::get()->filter(['Filename' => $fullPath])->first();
+                if($image && $image->exists()) {
+                    self::rehash_image($image);
+                }
             }
         }
     }
@@ -102,6 +114,38 @@ class ResizeAssetsRunner
 
         }
         // Copy and resize part of an image with resampling
+
+    }
+
+    public static function rehash_image($image)
+    {
+
+
+        // RUN!
+        /** @var Sha1FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+        try {
+            echo 'REHASHING '.$image->getFilename().PHP_EOL;
+            $hasher::flush();
+            if($image->isPublished()) {
+                $fs = AssetStore::VISIBILITY_PUBLIC;
+            } else {
+                $fs = AssetStore::VISIBILITY_PROTECTED;
+            }
+            $hash = $hasher->computeFromFile($image->getFilename(), $fs);
+            DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
+            if($image->isPublished()) {
+                DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
+            }
+            echo 'Publishing '.$image->getFilename().PHP_EOL;
+            if(! $image->exists()) {
+                echo 'ERROR: Image does not exist: '.$image->getFilename().PHP_EOL;
+            } else {
+                $image->publishSingle();
+            }
+        } catch (Exception $e) {
+            echo $e->getMessage().PHP_EOL;
+        }
 
     }
 
