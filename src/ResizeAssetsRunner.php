@@ -69,15 +69,7 @@ class ResizeAssetsRunner
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
 
         foreach ($files as $file) {
-<<<<<<< HEAD
-            if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif'])) {
-                self::run_one($file->getPathname(), $maxWidth, $maxHeight, $dryRun);
-                $fullPath = trim(str_replace(ASSETS_PATH, '', $file->getPathname()), '/');
-                $image = Image::get()->filter(['Filename' => $fullPath])->first();
-                if($image && $image->exists()) {
-                    self::rehash_image($image);
-=======
-            if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])) {
+            if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 foreach(self::$patterns_to_skip as $pattern) {
                     if(strpos($file, $pattern) !== false) {
                         continue 2;
@@ -103,7 +95,10 @@ class ResizeAssetsRunner
                         true // force resize!
                     );
                     echo 'ERROR! ' . $file . ' is still ' . $sizeCheck . '% too big!' . PHP_EOL;
->>>>>>> 06af06e81346241ede9fa3d35aa95f7df531e070
+                }
+                $image = Image::get()->filter(['Filename' => $fullPath])->first();
+                if($image && $image->exists()) {
+                    self::rehash_image($image);
                 }
             }
         }
