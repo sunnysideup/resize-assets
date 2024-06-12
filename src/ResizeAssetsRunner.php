@@ -3,23 +3,28 @@
 namespace Sunnysideup\ResizeAssets;
 
 use Exception;
+use Imagick;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use Imagick;
+use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Storage\Sha1FileHashingService;
-use SilverStripe\Assets\Image;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DB;
 
 class ResizeAssetsRunner
 {
     protected static $useImagick = false;
+
     protected static $useGd = false;
+
     protected static $patterns_to_skip = [];
+
     protected static $max_file_size_in_mb = 2;
+
     protected static $default_quality = 0.77;
+
     protected static $large_size_default_quality = 0.67;
 
     public static function set_imagick_as_converter()
@@ -41,7 +46,7 @@ class ResizeAssetsRunner
 
     public static function set_default_quality(?float $default_quality = 0.77)
     {
-        self::$default_quality =  $default_quality;
+        self::$default_quality = $default_quality;
     }
 
     public static function set_large_size_default_quality(?float $large_size_default_quality = 0.67)
@@ -70,8 +75,8 @@ class ResizeAssetsRunner
 
         foreach ($files as $file) {
             if (in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'gif'])) {
-                foreach(self::$patterns_to_skip as $pattern) {
-                    if(strpos($file, $pattern) !== false) {
+                foreach (self::$patterns_to_skip as $pattern) {
+                    if (strpos($file, $pattern) !== false) {
                         continue 2;
                     }
                 }
@@ -83,12 +88,12 @@ class ResizeAssetsRunner
                     $dryRun
                 );
                 $sizeCheck = self::isFileSizeGreaterThan($file->getPathname());
-                if($sizeCheck) {
+                if ($sizeCheck) {
                     list($width, $height) = getimagesize($file->getPathname());
                     $ratio = $width / $height;
                     self::run_one(
                         $file->getPathname(),
-                        round($width - (1  * $ratio)),
+                        round($width - (1 * $ratio)),
                         round($height - (1 * $ratio)),
                         self::$large_size_default_quality, // image quality is low to resize file size
                         $dryRun,
@@ -98,7 +103,7 @@ class ResizeAssetsRunner
                 }
                 $fullPath = trim('.', str_replace(ASSETS_PATH, '', $file->getPathname()));
                 $image = Image::get()->filter(['File.Filename' => $fullPath])->first();
-                if($image && $image->exists()) {
+                if ($image && $image->exists()) {
                     self::rehash_image($image);
                 } else {
                     echo 'ERROR! ' . $file . ' is not in the database!' . PHP_EOL;
@@ -109,12 +114,12 @@ class ResizeAssetsRunner
 
     public static function run_one(string $path, int $maxWidth, int $maxHeight, ?float $quality = 0.77, ?bool $dryRun = true, ?bool $force = false)
     {
-        if($quality > 1 && $quality < 0.3) {
+        if ($quality > 1 && $quality < 0.3) {
             user_error("Error: Quality should be between 0.3 and 1.0.\n");
         }
         list($width, $height) = getimagesize($path);
-        if ($width <= $maxWidth && $height <= $maxHeight && !$force) {
-            if($dryRun) {
+        if ($width <= $maxWidth && $height <= $maxHeight && ! $force) {
+            if ($dryRun) {
                 echo "-- skipping $path ({$width}x{$height})" . PHP_EOL;
             }
             return;
@@ -131,8 +136,7 @@ class ResizeAssetsRunner
 
         echo "Resizing $path" . PHP_EOL;
 
-
-        if(self::$useImagick) {
+        if (self::$useImagick) {
             user_error('You will have to manually run imagick.');
 
             // KEEP!
@@ -190,10 +194,8 @@ class ResizeAssetsRunner
             // KEEP!
             // KEEP!
 
-
             echo "$path NOT DONE.";
-        } elseif(self::$useGd) {
-
+        } elseif (self::$useGd) {
             // Create a new true color image
             $newImage = imagecreatetruecolor($newWidth, $newHeight);
 
@@ -210,7 +212,7 @@ class ResizeAssetsRunner
                     $sourceImage = imagecreatefromgif($path);
                     break;
             }
-            if($sourceImage) {
+            if ($sourceImage) {
                 imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
 
                 // Save the image
@@ -237,42 +239,39 @@ class ResizeAssetsRunner
             user_error("Error: Neither Imagick nor GD is installed.\n");
         }
         // Copy and resize part of an image with resampling
-
     }
 
     public static function rehash_image($image)
     {
-
         /** @var Sha1FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
         try {
-            echo 'REHASHING '.$image->getFilename().PHP_EOL;
+            echo 'REHASHING ' . $image->getFilename() . PHP_EOL;
             $hasher::flush();
-            if($image->isPublished()) {
+            if ($image->isPublished()) {
                 $fs = AssetStore::VISIBILITY_PUBLIC;
             } else {
                 $fs = AssetStore::VISIBILITY_PROTECTED;
             }
             $hash = $hasher->computeFromFile($image->getFilename(), $fs);
-            DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
-            if($image->isPublished()) {
-                DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
+            DB::query('UPDATE "File" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $image->ID);
+            if ($image->isPublished()) {
+                DB::query('UPDATE "File_Live" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $image->ID);
             }
-            echo 'Publishing '.$image->getFilename().PHP_EOL;
-            if(! $image->exists()) {
-                echo 'ERROR: Image does not exist: '.$image->getFilename().PHP_EOL;
+            echo 'Publishing ' . $image->getFilename() . PHP_EOL;
+            if (! $image->exists()) {
+                echo 'ERROR: Image does not exist: ' . $image->getFilename() . PHP_EOL;
             } else {
                 $image->publishSingle();
             }
         } catch (Exception $e) {
-            echo $e->getMessage().PHP_EOL;
+            echo $e->getMessage() . PHP_EOL;
         }
-
     }
 
     protected static function getImageResizerLib()
     {
-        if(self::$useImagick || self::$useGd) {
+        if (self::$useImagick || self::$useGd) {
             return;
         }
         // preferred...
@@ -284,6 +283,7 @@ class ResizeAssetsRunner
             exit("Error: Neither Imagick nor GD is installed.\n");
         }
     }
+
     protected static function isFileSizeGreaterThan(string $filePath): ?float
     {
         $fileSize = filesize($filePath);
@@ -293,7 +293,6 @@ class ResizeAssetsRunner
         }
         return null;
     }
-
 
     protected static function get_output_path(string $path): string
     {
