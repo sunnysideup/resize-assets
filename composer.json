@@ -23,5 +23,7 @@
     }
   ],
   "minimum-stability": "dev",
-  "require": {}
+  "require": {
+    "sunnysideup/resize-all-images": "dev-main"
+  }
 }
